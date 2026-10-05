@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 検索に載せない・遷移先へ参照元を渡さない・外部へは何も読みに行かない -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'">
+<title>リンクを開く</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <p id="msg">読み込み中…</p>
+  <a id="open" class="btn" hidden>開く</a>
+  <p class="note">自動で開かないときは、上のボタンを押してください。</p>
+  <!-- 版（build が中身から計算した8桁）。promote に渡すのはこの値 -->
+  <p id="ver" class="ver"></p>
+</main>
+<script type="module" src="page.js"></script>
+</body>
+</html>
