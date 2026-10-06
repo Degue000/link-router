@@ -14,6 +14,7 @@ export const APPS = Object.freeze({
     "package": "jp.co.jr_central.exreserve",
     "hosts": [
       "shinkansen2.jr-central.co.jp"
-    ]
+    ],
+    "launch": true
   }
 });

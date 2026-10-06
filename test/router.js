@@ -7,6 +7,8 @@
  *   - `#` より後ろ（a と u）は**サーバーへ送られない**。公開ページにも行き先URLは置かない
  *   - 行き先は **apps.json に登録したアプリ × そのアプリに許したドメイン** の組み合わせだけ開く
  *     （他人が同じ形のリンクを作っても、登録外のサイトは開かない）
+ *   - `u` を省くと「アプリを起動するだけ」。**apps.json で `"launch": true` にしたアプリだけ**（2026-10-06 追加。
+ *     スマートEX のアプリが、どのページのリンクも受け取らなかったため。開けるかは実機で確かめる）
  */
 
 /** @returns {{ok:true, appName:string, label:string, host:string, intent:string} | {ok:false, reason:string}} */
@@ -18,7 +20,12 @@ export function plan(hash, apps) {
 
   const app = key && Object.prototype.hasOwnProperty.call(apps, key) ? apps[key] : null;
   if (!app || app.enabled === false) return fail('このリンクの開き先（アプリ）は登録されていません');
-  if (!raw) return fail('開くページが指定されていません');
+  if (!raw) {
+    if (app.launch !== true) return fail('開くページが指定されていません');
+    // 起動するだけ。ページを渡さず、package でアプリを名指しする（Chrome が許す入口がアプリに無ければ Play ストアになる）
+    return { ok: true, appName: app.name, label: app.label, host: null, launchOnly: true,
+      intent: `intent://#Intent;package=${app.package};end` };
+  }
 
   let url;
   try { url = new URL(raw); } catch { return fail('開くページのURLの形が正しくありません'); }
@@ -34,7 +41,8 @@ export function plan(hash, apps) {
   return { ok: true, appName: app.name, label: app.label, host: url.hostname, intent };
 }
 
-/** リンクの `#` 以降を作る（make-link 用）。作ったものは必ず plan() で確かめてから使う */
+/** リンクの `#` 以降を作る（make-link 用）。url を省くと「起動するだけ」。作ったものは必ず plan() で確かめてから使う */
 export function fragmentFor(appKey, url) {
-  return `#a=${encodeURIComponent(appKey)}&u=${encodeURIComponent(url)}`;
+  const a = `#a=${encodeURIComponent(appKey)}`;
+  return url == null ? a : `${a}&u=${encodeURIComponent(url)}`;
 }

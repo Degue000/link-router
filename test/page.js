@@ -20,7 +20,7 @@ const btn = document.getElementById('open');
 if (!r.ok) {
   msg.textContent = r.reason;
 } else {
-  msg.textContent = `${r.host} を ${r.appName} で開きます`;
+  msg.textContent = r.launchOnly ? `${r.appName} を起動します` : `${r.host} を ${r.appName} で開きます`;
   btn.href = r.intent;
   btn.textContent = r.label;
   btn.hidden = false;           // 開き先が決まったときだけボタンを出す
