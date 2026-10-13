@@ -11,7 +11,10 @@
  *     スマートEX のアプリが、どのページのリンクも受け取らなかったため。開けるかは実機で確かめる）
  */
 
-const SAFE_HASH = /^#[A-Za-z0-9/_.-]{1,200}$/;
+// 英数字・/ _ - . と、`%` に16進数2桁が続く形（例 スマホ版 Gmail の `#cv/priority/%5Ei/<ID>`。2026-10-13 追加）。
+// ただし `#`（%23）と `;`（%3B）を符号化した形は通さない（intent の書式を壊す文字。念のため）
+const SAFE_HASH = /^#(?:[A-Za-z0-9/_.-]|%[0-9A-Fa-f]{2}){1,200}$/;
+const UNSAFE_ESCAPE = /%(?:23|3b)/i;
 
 /** @returns {{ok:true, appName:string, label:string, host:string, intent:string} | {ok:false, reason:string}} */
 export function plan(hash, apps) {
@@ -35,7 +38,7 @@ export function plan(hash, apps) {
   if (url.username || url.password) return fail('ログイン情報を含むURLは開けません');
   // 行き先の # 以降（例 Gmail の #inbox/<ID>）は、英数字と / _ - . だけなら通す（2026-10-06）。
   // ; や # が入ると intent の書式（#Intent;...;end）を壊したり、別のアプリの指定を紛れ込ませたりできるので断る
-  if (url.hash && !SAFE_HASH.test(url.hash)) return fail('この形の # を含むURLは開けません');
+  if (url.hash && (!SAFE_HASH.test(url.hash) || UNSAFE_ESCAPE.test(url.hash))) return fail('この形の # を含むURLは開けません');
   if (!Array.isArray(app.hosts) || !app.hosts.includes(url.hostname)) {
     return fail(`このサイトは「${app.name}」で開くサイトとして登録されていません`);
   }
