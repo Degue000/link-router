@@ -5,7 +5,8 @@ export const APPS = Object.freeze({
     "label": "Firefoxで開く",
     "package": "org.mozilla.firefox",
     "hosts": [
-      "script.google.com"
+      "script.google.com",
+      "mail.google.com"
     ]
   },
   "smartex": {

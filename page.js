@@ -9,6 +9,10 @@ const isTest = /\/test\/(index\.html)?$/.test(location.pathname);
 document.getElementById('ver').textContent = `${isTest ? 'テスト ・ ' : ''}link-router ${BUILD}`;
 if (isTest) document.body.classList.add('is-test');
 
+// 同じタブのまま `#` だけ違うリンクへ移ると、ページは読み直されず前のリンクのボタンが残る（押すと前の行き先が開く）。
+// `#` が変わったら読み直して、最初から判定し直す（2026-10-12。Codex Round 1。下の replaceState は hashchange を起こさない）
+window.addEventListener('hashchange', () => location.reload());
+
 const r = plan(location.hash, APPS);
 
 // ★行き先をアドレスバーから消す（画面を見せたり共有したりしたときに、行き先URLが残らないように）
