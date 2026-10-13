@@ -11,6 +11,8 @@
  *     スマートEX のアプリが、どのページのリンクも受け取らなかったため。開けるかは実機で確かめる）
  */
 
+const SAFE_HASH = /^#[A-Za-z0-9/_.-]{1,200}$/;
+
 /** @returns {{ok:true, appName:string, label:string, host:string, intent:string} | {ok:false, reason:string}} */
 export function plan(hash, apps) {
   const fail = (reason) => ({ ok: false, reason });
@@ -31,13 +33,15 @@ export function plan(hash, apps) {
   try { url = new URL(raw); } catch { return fail('開くページのURLの形が正しくありません'); }
   if (url.protocol !== 'https:') return fail('https のページだけ開けます');
   if (url.username || url.password) return fail('ログイン情報を含むURLは開けません');
-  if (url.hash) return fail('# を含むURLは開けません');
+  // 行き先の # 以降（例 Gmail の #inbox/<ID>）は、英数字と / _ - . だけなら通す（2026-10-06）。
+  // ; や # が入ると intent の書式（#Intent;...;end）を壊したり、別のアプリの指定を紛れ込ませたりできるので断る
+  if (url.hash && !SAFE_HASH.test(url.hash)) return fail('この形の # を含むURLは開けません');
   if (!Array.isArray(app.hosts) || !app.hosts.includes(url.hostname)) {
     return fail(`このサイトは「${app.name}」で開くサイトとして登録されていません`);
   }
 
   // Chrome の intent 形式。package を名指しすると、そのアプリで開く（入っていなければ Play ストア）
-  const intent = `intent://${url.host}${url.pathname}${url.search}#Intent;scheme=https;package=${app.package};end`;
+  const intent = `intent://${url.host}${url.pathname}${url.search}${url.hash}#Intent;scheme=https;package=${app.package};end`;
   return { ok: true, appName: app.name, label: app.label, host: url.hostname, intent };
 }
 
