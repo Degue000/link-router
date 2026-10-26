@@ -16,10 +16,38 @@
 const SAFE_HASH = /^#(?:[A-Za-z0-9/_.-]|%[0-9A-Fa-f]{2}){1,200}$/;
 const UNSAFE_ESCAPE = /%(?:23|3b)/i;
 
+/**
+ * PC 用の中継（2026-10-26 追加。personal-portal の REVIEW_BRIEFING §18・この README「PC 用の中継」）。
+ * リンクの形: <公開先のURL>#company-chrome:<名前>（`?openExternalBrowser=1` は付けない。LINE を通らない）
+ *   - PC の独自のリンク `company-chrome:<名前>`（PC の HKCU に登録した受け口が会社のプロファイルの Chrome を起動する）へ移るだけ
+ *   - GAS の画面（sandbox の iframe）の中から独自のリンクへ移ると Firefox が止めた（2026-10-26 実機）。
+ *     sandbox の外のふつうのページであるこの中継から移れば、Firefox が「開くアプリ」を聞いて受け口が動く見込み（推測）
+ *   - **名前の許可リストをここにも置く**（受け口の許可リストと同じ名前）。URL は置かない（行き先は受け口が決める）
+ *   - 形は `#<形式>:<名前>` だけ。知らない形式・知らない名前・余計な文字があれば何もしない
+ */
+const CUSTOM_LINKS = Object.freeze({
+  'company-chrome': Object.freeze({
+    appName: '会社の Chrome',
+    label: '会社の Chrome で開く',
+    names: Object.freeze({ claude: 'Claude', codex: 'Codex' }),
+  }),
+});
+const CUSTOM_HASH = /^#([a-z][a-z0-9-]{0,30}):([a-z][a-z0-9]{0,30})$/;
+
 /** @returns {{ok:true, appName:string, label:string, host:string, intent:string} | {ok:false, reason:string}} */
 export function plan(hash, apps) {
   const fail = (reason) => ({ ok: false, reason });
-  const p = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+  const h = String(hash || '');
+  // PC 用（`#a=` の形ではないもの）。`=` `&` より前に `:` がある `#` は Android の形（a= と u=）には無いので、ここで見分ける
+  if (/^#[^=&]*:/.test(h)) {
+    const m = CUSTOM_HASH.exec(h);
+    const kind = m && Object.prototype.hasOwnProperty.call(CUSTOM_LINKS, m[1]) ? CUSTOM_LINKS[m[1]] : null;
+    const name = kind && Object.prototype.hasOwnProperty.call(kind.names, m[2]) ? m[2] : null;
+    if (!name) return fail('このリンクの開き先は登録されていません');
+    return { ok: true, custom: true, appName: kind.appName, label: kind.label, target: kind.names[name],
+      href: `${m[1]}:${name}` };
+  }
+  const p = new URLSearchParams(h.replace(/^#/, ''));
   const key = p.get('a');
   const raw = p.get('u');
 
@@ -52,4 +80,9 @@ export function plan(hash, apps) {
 export function fragmentFor(appKey, url) {
   const a = `#a=${encodeURIComponent(appKey)}`;
   return url == null ? a : `${a}&u=${encodeURIComponent(url)}`;
+}
+
+/** PC 用の中継の `#` 以降（試験用）。作ったものは plan() で確かめてから使う */
+export function customFragment(kind, name) {
+  return `#${kind}:${name}`;
 }
