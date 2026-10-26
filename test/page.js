@@ -23,6 +23,21 @@ const btn = document.getElementById('open');
 
 if (!r.ok) {
   msg.textContent = r.reason;
+} else if (r.custom) {
+  // PC 用（2026-10-26）: 独自のリンク（例 company-chrome:claude）へ移る。移った後もこのページは残る（外部のアプリを開くだけなので）
+  btn.href = r.href;
+  btn.textContent = r.label;
+  btn.hidden = false;           // 自動の遷移が止められたとき用
+  location.href = r.href;
+  msg.textContent = `${r.appName} で開きました（${r.target}）。このタブは閉じてかまいません。`;
+  // 自動では閉じない: Firefox の「開くアプリ」の確認が出ている間にタブを閉じると、確認ごと消える（推測）。
+  // また Firefox は script で開いていないタブを閉じられないことがある。押したときだけ閉じ、閉じられなければ案内を出す
+  const close = document.getElementById('close');
+  close.hidden = false;
+  close.addEventListener('click', () => {
+    window.close();
+    setTimeout(() => { close.textContent = 'このタブは Ctrl+W で閉じてください'; close.disabled = true; }, 300);
+  });
 } else {
   msg.textContent = r.launchOnly ? `${r.appName} を起動します` : `${r.host} を ${r.appName} で開きます`;
   btn.href = r.intent;

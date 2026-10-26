@@ -15,6 +15,8 @@
   <p id="msg">読み込み中…</p>
   <a id="open" class="btn" hidden>開く</a>
   <p class="note">自動で開かないときは、上のボタンを押してください。</p>
+  <!-- PC 用の中継（#company-chrome:<名前>）のときだけ出す。page.js が押されたときに window.close() を試す -->
+  <button id="close" type="button" class="btn2" hidden>このタブを閉じる</button>
   <!-- 版（build が中身から計算した8桁）。promote に渡すのはこの値 -->
   <p id="ver" class="ver"></p>
 </main>
