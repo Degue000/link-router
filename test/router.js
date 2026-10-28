@@ -29,7 +29,7 @@ const CUSTOM_LINKS = Object.freeze({
   'company-chrome': Object.freeze({
     appName: '会社の Chrome',
     label: '会社の Chrome で開く',
-    names: Object.freeze({ claude: 'Claude', codex: 'Codex', 'bizmates-sami': 'Bizmates Sami' }),
+    names: Object.freeze({ claude: 'Claude', codex: 'Codex', bizmates: 'Bizmates' }),
   }),
 });
 const CUSTOM_HASH = /^#([a-z][a-z0-9-]{0,30}):([a-z][a-z0-9-]{0,30})$/;
